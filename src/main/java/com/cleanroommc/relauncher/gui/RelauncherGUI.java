@@ -6,10 +6,13 @@ import com.cleanroommc.javautils.spi.JavaLocator;
 import com.cleanroommc.platformutils.Platform;
 import com.cleanroommc.relauncher.CleanroomRelauncher;
 import com.cleanroommc.relauncher.download.CleanroomRelease;
+import com.cleanroommc.relauncher.util.enums.ArgsEnum;
+import com.cleanroommc.relauncher.util.enums.IDisplayableEnum;
+import com.cleanroommc.relauncher.util.enums.JavaTargetsEnum;
+import com.cleanroommc.relauncher.util.enums.VendorsEnum;
 import net.minecraftforge.fml.cleanroomrelauncher.ExitVMBypass;
 
 import javax.swing.*;
-import javax.swing.Timer;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
@@ -19,7 +22,9 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -145,10 +150,81 @@ public class RelauncherGUI extends JDialog {
     }
 
     public CleanroomRelease selected;
+    public boolean automaticInstall = true;
+    public JavaTargetsEnum targetSelected = JavaTargetsEnum.J25;
+    public VendorsEnum vendorSelected = VendorsEnum.AZUL_ZULU;
     public String javaPath, javaArgs;
+    private static HashSet<ArgsEnum> args = new HashSet<>();
+    public void updateJavaArgs() {
+        //TODO: make this run on AdvBtn
+        StringBuilder argBuilder = new StringBuilder();
+        for(ArgsEnum arg : args) {
+            argBuilder.append(arg.getArg()).append(" ");
+        }
+        if (targetSelected.getInternalNameInt()< 25 && args.contains(ArgsEnum.CompactObjectHeaders)) {
+            argBuilder.append(ArgsEnum.UnlockExperimentalOptions.getArg()).append(" ");
+        }
+        javaArgs = argBuilder.toString();
+    }
 
     private JFrame frame;
+    private CardLayout cardLayout = new CardLayout();
+    private JPanel cards = new JPanel(cardLayout);
 
+    private JPanel createStartScreen() {
+        //Fast Relaunch Panel
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+        JLabel logo = new JLabel(new ImageIcon(frame.getIconImage().getScaledInstance(160, 160, Image.SCALE_SMOOTH)));
+        logo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        logo.setBorder(new EmptyBorder(50, 0, 50, 0));
+
+        JButton fastRelaunchBtn = new JButton("Relaunch Now");
+        fastRelaunchBtn.addActionListener(e -> {
+            frame.dispose();
+        });
+        JButton advancedBtn = new JButton("Advanced Settings");
+
+        fastRelaunchBtn.setFont(fastRelaunchBtn.getFont().deriveFont(Font.BOLD, 14f));
+        this.getRootPane().setDefaultButton(fastRelaunchBtn);
+
+        advancedBtn.addActionListener(e -> cardLayout.show(cards, "ADVANCED"));
+
+        JPanel btnBox = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
+        btnBox.add(fastRelaunchBtn);
+        btnBox.add(advancedBtn);
+        panel.add(logo);
+        panel.add(btnBox);
+
+        return panel;
+    }
+
+    private JPanel createAdvancedScreen(List<CleanroomRelease> releases) {
+        JPanel container = new JPanel(new BorderLayout());
+
+
+        JPanel mainContent = new JPanel();
+        mainContent.setLayout(new BoxLayout(mainContent, BoxLayout.Y_AXIS));
+
+        JLabel logo = new JLabel(new ImageIcon(frame.getIconImage().getScaledInstance(80, 80, Image.SCALE_SMOOTH)));
+        logo.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        mainContent.add(logo);
+        mainContent.add(this.initializeCleanroomPicker(releases));
+        mainContent.add(this.initializeJavaPicker());
+        mainContent.add(this.initializeArgsPanel());
+
+        JPanel wrapper = new JPanel(new GridBagLayout());
+        wrapper.add(mainContent);
+
+        JPanel relaunchPanel = this.initializeRelaunchPanel();
+
+        container.add(wrapper, BorderLayout.CENTER);
+        container.add(relaunchPanel, BorderLayout.SOUTH);
+
+        return container;
+    }
     private RelauncherGUI(SupportingFrame frame, List<CleanroomRelease> eligibleReleases, Consumer<RelauncherGUI> consumer) {
         super(frame, frame.getTitle(), true);
         this.frame = frame;
@@ -176,48 +252,23 @@ public class RelauncherGUI extends JDialog {
         });
         this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         this.setAlwaysOnTop(true);
-
         GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice screen = env.getDefaultScreenDevice();
         Rectangle rect = screen.getDefaultConfiguration().getBounds();
-        int width = rect.width / 3;
-        int height = (int) (width / 1.25f);
+        int width = (int) (rect.width / 3.25f);//Changed values to accommodate for new GUI
+        int height = (int) (width / 0.95f);
         int x = (rect.width - width) / 2;
         int y = (rect.height - height) / 2;
         this.setLocation(x, y);
 
-        JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        JPanel startCard = createStartScreen();
+        JPanel advancedCard = createAdvancedScreen(eligibleReleases);
 
-        JLabel cleanroomLogo = new JLabel(new ImageIcon(frame.getIconImage().getScaledInstance(80, 80, Image.SCALE_SMOOTH)));
+        cards.add(startCard, "START");
+        cards.add(advancedCard, "ADVANCED");
 
-        JPanel cleanroomPickerPanel = this.initializeCleanroomPicker(eligibleReleases);
-        mainPanel.add(cleanroomPickerPanel);
 
-        JPanel javaPickerPanel = this.initializeJavaPicker();
-        mainPanel.add(javaPickerPanel);
-
-        JPanel argsPanel = this.initializeArgsPanel();
-        mainPanel.add(argsPanel);
-
-        JPanel contentPanel = new JPanel();
-        contentPanel.setLayout(new BorderLayout());
-        contentPanel.add(cleanroomLogo, BorderLayout.NORTH);
-        contentPanel.add(mainPanel, BorderLayout.SOUTH);
-
-        JPanel wrapper = new JPanel();
-        wrapper.setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 1.0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        wrapper.add(contentPanel, gbc);
-
-        JPanel relaunchButtonPanel = this.initializeRelaunchPanel();
-
-        this.add(wrapper, BorderLayout.NORTH);
-        this.add(relaunchButtonPanel, BorderLayout.SOUTH);
+        this.add(cards);
         float scale = rect.width / 1463f;
         scaleComponent(this, scale);
 
@@ -271,16 +322,104 @@ public class RelauncherGUI extends JDialog {
 
         return cleanroomPicker;
     }
+    private <T extends Enum<T> & IDisplayableEnum>JPanel initializeJavaTargetsPicker(
+            String titleLabel,
+            T[] values,
+            T selected,
+            Consumer<T> onSelectionChange
+    ){
+        // Target Java Version
+        // Panel
+        JPanel panel = new JPanel(new BorderLayout(5, 0));
 
+        JPanel select = new JPanel();
+        select.setLayout(new BoxLayout(select, BoxLayout.Y_AXIS));
+        panel.add(select);
+
+        // Title label
+        JLabel title = new JLabel(titleLabel);
+        title.setAlignmentX(Component.LEFT_ALIGNMENT);
+        select.add(title);
+        select.add(Box.createRigidArea(new Dimension(0, 5)));
+
+        // Create dropdown panel
+        JPanel dropdown = new JPanel(new BorderLayout(5, 5));
+        dropdown.setAlignmentX(Component.LEFT_ALIGNMENT);
+        select.add(dropdown);
+
+        JComboBox<T> targetBox = new JComboBox<>();
+        DefaultComboBoxModel<T> targetModel = new DefaultComboBoxModel<>();
+        for (T target : values) {
+            targetModel.addElement(target);
+        }
+        targetBox.setModel(targetModel);
+        targetBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof IDisplayableEnum) {
+                    setText((((IDisplayableEnum) value).getDisplayName()));
+                }
+                return this;
+            }
+        });
+        targetBox.setSelectedItem(selected);
+        targetBox.setMaximumRowCount(5);
+        targetBox.addActionListener(e -> {
+            T newItem = (T) targetBox.getSelectedItem();
+            onSelectionChange.accept(newItem);
+        });
+        dropdown.add(targetBox, BorderLayout.CENTER);
+        return panel;
+    }
     private JPanel initializeJavaPicker() {
         // Main Panel
         JPanel javaPicker = new JPanel(new BorderLayout(5, 0));
+        javaPicker.setLayout(new BoxLayout(javaPicker, BoxLayout.Y_AXIS));
         javaPicker.setBorder(BorderFactory.createEmptyBorder(20, 10, 0, 10));
 
+        // Radio buttons
+        // TODO: Size mismatch between buttons
+        JToggleButton simplifiedBtn = new JToggleButton("Automatic Install", true);
+        JToggleButton manualBtn = new JToggleButton("Manual Selection");
+
+        ButtonGroup group = new ButtonGroup();
+        group.add(simplifiedBtn);
+        group.add(manualBtn);
+
+
+        JPanel radioPanel = new JPanel(new BorderLayout(5, 0));
+        radioPanel.setLayout(new BoxLayout(radioPanel, BoxLayout.X_AXIS));
+        radioPanel.add(simplifiedBtn);
+        radioPanel.add(manualBtn);
+        javaPicker.add(radioPanel);
+
+        JPanel switchableContainer = new JPanel(new BorderLayout());
+        javaPicker.add(switchableContainer);
+
+
+        JPanel targetPanels = new JPanel();
+        targetPanels.setLayout(new BoxLayout(targetPanels, BoxLayout.Y_AXIS));
+        JPanel versionPanel = this.initializeJavaTargetsPicker(
+                "Select Target Java Version:",
+                JavaTargetsEnum.values(),
+                targetSelected,
+                (JavaTargetsEnum val) -> targetSelected = val
+        );
+
+        JPanel vendorPanel = this.initializeJavaTargetsPicker(
+                "Select Preferred Vendor:",
+                VendorsEnum.values(),
+                vendorSelected,
+                (VendorsEnum val) -> vendorSelected = val
+        );
+        targetPanels.add(versionPanel, BorderLayout.NORTH);
+        targetPanels.add(vendorPanel, BorderLayout.SOUTH);
+
         // Select Panel
-        JPanel selectPanel = new JPanel(new BorderLayout(5, 5));
+        JPanel selectPanel = new JPanel();
         selectPanel.setLayout(new BoxLayout(selectPanel, BoxLayout.Y_AXIS));
-        JPanel subSelectPanel = new JPanel(new BorderLayout(5, 5));
+        JPanel subSelectPanel = new JPanel(new BorderLayout());
         JLabel title = new JLabel("Select Java Executable:");
         JTextField text = new JTextField(100);
         text.setText(javaPath);
@@ -293,7 +432,6 @@ public class RelauncherGUI extends JDialog {
         JButton browse = new JButton("Browse");
         subSelectPanel.add(browse, BorderLayout.EAST);
         selectPanel.add(subSelectPanel);
-        javaPicker.add(selectPanel);
 
         // Java Version Dropdown
         JPanel versionDropdown = new JPanel(new BorderLayout(5, 0));
@@ -330,6 +468,27 @@ public class RelauncherGUI extends JDialog {
         options.setLayout(new BoxLayout(options, BoxLayout.X_AXIS));
         options.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         selectPanel.add(options);
+
+        // Switch
+        ActionListener switchAction = e -> {
+            switchableContainer.removeAll();
+            if (simplifiedBtn.isSelected()) {
+                switchableContainer.add(targetPanels);
+                automaticInstall = true;
+            } else {
+                switchableContainer.add(selectPanel);
+                automaticInstall = false;
+            }
+            switchableContainer.revalidate();
+            switchableContainer.repaint();
+        };
+
+        simplifiedBtn.addActionListener(switchAction);
+        manualBtn.addActionListener(switchAction);
+        // Initialize the switchableContainer
+        switchableContainer.removeAll();
+        switchableContainer.add(targetPanels);
+
         // JButton download = new JButton("Download");
         JButton autoDetect = new JButton("Auto-Detect");
         JButton test = new JButton("Test");
@@ -443,6 +602,7 @@ public class RelauncherGUI extends JDialog {
     }
 
     private JPanel initializeArgsPanel() {
+
         // Main Panel
         JPanel argsPanel = new JPanel(new BorderLayout(0, 0));
         argsPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
@@ -452,10 +612,56 @@ public class RelauncherGUI extends JDialog {
         JTextField text = new JTextField(100);
         text.setText(javaArgs);
         listenToTextFieldUpdate(text, t -> javaArgs = t.getText());
+
         addTextBoxEffect(text);
 
         argsPanel.add(title, BorderLayout.NORTH);
         argsPanel.add(text, BorderLayout.CENTER);
+
+        JPanel argsPickerPanel = new JPanel();
+        argsPickerPanel.setLayout(new BoxLayout(argsPickerPanel, BoxLayout.Y_AXIS));
+        argsPickerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        // When arg checkbox is active, run SyncTextField
+        Runnable syncTextField = () -> {
+            boolean hasSelectedOptions = !args.isEmpty();
+            text.setEditable(!hasSelectedOptions);
+            text.setEnabled(!hasSelectedOptions);
+            text.setText(javaArgs);
+        };
+
+
+        for(ArgsEnum arg : ArgsEnum.values()) {
+            if (arg != ArgsEnum.UnlockExperimentalOptions) {
+                JPanel optionsPanel = new JPanel(new BorderLayout());
+                optionsPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+                JLabel label = new JLabel("Use "+arg.name()+" Argument "+arg.getStatus());
+                JCheckBox checkBox = new JCheckBox();
+                checkBox.setSelected(arg.isSelectedByDefault());
+                if(arg.isSelectedByDefault()) {
+                    args.add(arg);
+                    updateJavaArgs();
+                    syncTextField.run();
+                }
+                checkBox.addItemListener(e -> {
+                    if (e.getStateChange() == ItemEvent.SELECTED) {
+                        CleanroomRelauncher.LOGGER.info("Adding {} Argument {}", arg.name(), arg.getStatus());
+                        args.add(arg);
+                        updateJavaArgs();
+                    } else {
+                        CleanroomRelauncher.LOGGER.info("Removing {} Argument {}", arg.name(), arg.getStatus());
+                        args.remove(arg);
+                        updateJavaArgs();
+                    }
+                    syncTextField.run();
+                    CleanroomRelauncher.LOGGER.warn("args are now {}", javaArgs);
+                });
+
+                optionsPanel.add(label, BorderLayout.WEST);
+                optionsPanel.add(checkBox, BorderLayout.EAST);
+                argsPickerPanel.add(optionsPanel, BorderLayout.CENTER);
+            }
+        }
+        argsPanel.add(argsPickerPanel, BorderLayout.SOUTH);
 
         return argsPanel;
     }
@@ -470,7 +676,7 @@ public class RelauncherGUI extends JDialog {
                 JOptionPane.showMessageDialog(this, "Please select a Cleanroom version in order to relaunch.", "Cleanroom Release Not Selected", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            if (javaPath == null) {
+            if (javaPath == null || (targetSelected==null && vendorSelected==null)) {
                 JOptionPane.showMessageDialog(this, "Please provide a valid Java Executable in order to relaunch.", "Java Executable Not Selected", JOptionPane.ERROR_MESSAGE);
                 return;
             }

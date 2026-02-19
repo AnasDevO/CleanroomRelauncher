@@ -7,6 +7,8 @@ import com.cleanroommc.relauncher.download.CleanroomRelease;
 import com.cleanroommc.relauncher.download.cache.CleanroomCache;
 import com.cleanroommc.relauncher.download.schema.Version;
 import com.cleanroommc.relauncher.gui.RelauncherGUI;
+import com.cleanroommc.relauncher.util.enums.JavaTargetsEnum;
+import com.cleanroommc.relauncher.util.enums.VendorsEnum;
 import com.google.gson.Gson;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.fml.cleanroomrelauncher.ExitVMBypass;
@@ -16,13 +18,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.ProcessIdUtil;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.management.ManagementFactory;
 import java.nio.file.*;
 import java.util.*;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static com.cleanroommc.relauncher.download.JavaProvisioning.validateOrProvisionJava;
 
 public class CleanroomRelauncher {
 
@@ -147,8 +153,14 @@ public class CleanroomRelauncher {
         String notedLatestVersion = CONFIG.getLatestCleanroomVersion();
         String javaPath = CONFIG.getJavaExecutablePath();
         String javaArgs = CONFIG.getJavaArguments();
+        JavaTargetsEnum javaTarget = CONFIG.getJavaTarget();
+        VendorsEnum javaVendor = CONFIG.getJavaVendor();
+        boolean autoInitialize = CONFIG.isAutoInitialize();
         boolean needsNotifyLatest = notedLatestVersion == null || !notedLatestVersion.equals(latestRelease.name);
-        if (selectedVersion != null) {
+        if(autoInitialize){
+            selected = latestRelease;
+        }
+        else if (selectedVersion != null) {
             selected = releases.stream().filter(cr -> cr.name.equals(selectedVersion)).findFirst().orElse(null);
         }
         if (javaPath != null && !new File(javaPath).isFile()) {
@@ -167,9 +179,17 @@ public class CleanroomRelauncher {
                 $.javaArgs = fJavaArgs;
             });
 
-            selected = gui.selected;
+            if (gui.selected != null) {
+                selected = gui.selected;
+            } else{
+                selected = latestRelease;
+            }
             javaPath = gui.javaPath;
             javaArgs = gui.javaArgs;
+            javaTarget = gui.targetSelected;
+            javaVendor = gui.vendorSelected;
+
+            javaPath = validateOrProvisionJava(javaPath, javaTarget, javaVendor);
 
             CONFIG.setCleanroomVersion(selected.name);
             CONFIG.setLatestCleanroomVersion(latestRelease.name);
@@ -197,7 +217,7 @@ public class CleanroomRelauncher {
                 .collect(Collectors.joining(File.pathSeparator));
 
         String fullClassPath = wrapperClassPath + File.pathSeparator + libraryClassPath;
-        arguments.add(fullClassPath); // Ensure this is not empty
+            arguments.add(fullClassPath); // Ensure this is not empty
 
         if (javaArgs != null && !javaArgs.isEmpty()) {
             Arrays.stream(javaArgs.split(" ")).map(String::trim).forEach(arguments::add);

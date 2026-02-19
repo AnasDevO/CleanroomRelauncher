@@ -1,6 +1,8 @@
 package com.cleanroommc.relauncher.config;
 
 import com.cleanroommc.relauncher.CleanroomRelauncher;
+import com.cleanroommc.relauncher.util.enums.JavaTargetsEnum;
+import com.cleanroommc.relauncher.util.enums.VendorsEnum;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
@@ -31,10 +33,16 @@ public class RelauncherConfiguration {
     private String cleanroomVersion;
     @SerializedName("latestVersion")
     private String latestCleanroomVersion;
+    @SerializedName("targetJavaVersion")
+    private JavaTargetsEnum targetJavaVersion;
+    @SerializedName("targetVendor")
+    private VendorsEnum targetVendor;
     @SerializedName("javaPath")
     private String javaExecutablePath;
     @SerializedName("args")
     private String javaArguments = "";
+    @SerializedName("autoInitialize")
+    private boolean autoInitialize;
 
     public String getCleanroomVersion() {
         return cleanroomVersion;
@@ -44,12 +52,24 @@ public class RelauncherConfiguration {
         return latestCleanroomVersion;
     }
 
+    public VendorsEnum getJavaVendor() {
+        return targetVendor;
+    }
+
+    public JavaTargetsEnum getJavaTarget() {
+        return targetJavaVersion;
+    }
+
     public String getJavaExecutablePath() {
         return javaExecutablePath;
     }
 
     public String getJavaArguments() {
         return javaArguments;
+    }
+
+    public boolean isAutoInitialize() {
+        return autoInitialize;
     }
 
     public void setCleanroomVersion(String cleanroomVersion) {
