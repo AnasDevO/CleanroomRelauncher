@@ -706,7 +706,7 @@ public class RelauncherGUI extends JDialog {
                 JCheckBox checkBox = new JCheckBox();
 
                 boolean isPresentInArgs = RelauncherConfiguration.read().argsContain(arg);
-                checkBox.setSelected(isPresentInArgs);
+                checkBox.setSelected(isPresentInArgs || arg.isSelectedByDefault());
                 if (javaArgsSupplied){
                     checkBox.setSelected(isPresentInArgs);
                     if (isPresentInArgs){

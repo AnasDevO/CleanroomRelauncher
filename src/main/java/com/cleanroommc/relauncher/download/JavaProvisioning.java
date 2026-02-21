@@ -358,7 +358,6 @@ public class JavaProvisioning {
                 return "";
             }
 
-            // Regex redirect url, FooJay doesn't do redirects on its own
             Path javaHomeBase = Paths.get(System.getProperty("user.home"), ".cleanroom", "java",
                     vendor.name().toLowerCase() + "-" + target.getInternalNameInt());
 
