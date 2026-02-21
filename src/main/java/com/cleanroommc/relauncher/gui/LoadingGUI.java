@@ -15,7 +15,7 @@ public class LoadingGUI {
     public LoadingGUI() {
         frame = new JFrame("Cleanroom Relauncher Progress");
         frame.setUndecorated(true);
-        frame.setSize(isJvm8Oracle() ? 400 : 800, isJvm8Oracle() ? 100 : 400);
+        frame.setSize(800,400);
         frame.setLocationRelativeTo(null);
         frame.setLayout(new BorderLayout());
 
