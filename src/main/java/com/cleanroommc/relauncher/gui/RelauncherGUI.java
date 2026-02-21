@@ -224,7 +224,10 @@ public class RelauncherGUI extends JDialog {
         logo.setBorder(new EmptyBorder(50, 0, 50, 0));
 
         JButton fastRelaunchBtn = new JButton("Relaunch Now");
-        fastRelaunchBtn.addActionListener(e -> frame.dispose());
+        fastRelaunchBtn.addActionListener(e -> {
+            autoSetup = true;
+            frame.dispose();
+        });
         JButton advancedBtn = new JButton("Advanced Settings");
 
         fastRelaunchBtn.setFont(fastRelaunchBtn.getFont().deriveFont(Font.BOLD, 14f));
