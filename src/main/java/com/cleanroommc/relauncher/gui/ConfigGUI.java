@@ -156,11 +156,15 @@ public class ConfigGUI extends JDialog {
     private static HashSet<ArgsEnum> args = new HashSet<>();
     public void updateJavaArgs() {
         StringBuilder argBuilder = new StringBuilder();
-        if (targetSelected.getInternalNameInt()< 25 && args.contains(ArgsEnum.CompactObjectHeaders)) {
+        if (targetSelected.getInternalNameInt()< 25) {
             argBuilder.append(ArgsEnum.UnlockExperimentalOptions.getArg()).append(" ");
         }
         for(ArgsEnum arg : args) {
-            argBuilder.append(arg.getArg()).append(" ");
+            if (arg == ArgsEnum.CompactObjectHeaders && targetSelected.getInternalNameInt() >= 24) {
+                argBuilder.append(arg.getArg()).append(" ");
+            }else if(arg == ArgsEnum.ZGC){
+                argBuilder.append(arg.getArg()).append(" ");
+            }
         }
         javaArgs = argBuilder.toString();
     }
