@@ -109,7 +109,7 @@ public class GUIRelauncherMenu extends GuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         this.drawDefaultBackground();
-        this.drawCenteredString(this.fontRenderer, "Cleanroom Relauncher Settings", this.width / 2, 15, 16777215);
+        this.drawCenteredString(this.fontRenderer, "Cleanroom Relauncher Settings (Changes require restart)", this.width / 2, 15, 16777215);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
