@@ -43,7 +43,7 @@ public class RelauncherConfiguration {
     @SerializedName("args")
     private String javaArguments = "";
     @SerializedName("autoSetup")
-    private boolean autoSetup;
+    private boolean autoSetup=true;
     @SerializedName("enableRelauncher")
     private boolean enableRelauncher=true;
 

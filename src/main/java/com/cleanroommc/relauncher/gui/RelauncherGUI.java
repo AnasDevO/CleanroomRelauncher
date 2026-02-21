@@ -32,13 +32,26 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.cleanroommc.relauncher.CleanroomRelauncher.isJvm8;
+import static com.cleanroommc.relauncher.CleanroomRelauncher.isJvm8Oracle;
 
 public class RelauncherGUI extends JDialog {
 
     static {
+        System.setProperty("awt.useSystemAAFontSettings","on");
+        System.setProperty("swing.aatext", "true");
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ignore) { }
+        Font baseFont = new Font("SansSerif", Font.PLAIN, 12);
+        String[] fontKeys = {
+                "Button.font", "Label.font", "ComboBox.font",
+                "TextField.font", "CheckBox.font", "ToggleButton.font",
+                "Panel.font", "OptionPane.font", "List.font"
+        };
+        for (String key : fontKeys) {
+            UIManager.put(key, baseFont);
+        }
+
     }
 
     private static void scaleComponent(Component component, float scale) {
@@ -285,6 +298,9 @@ public class RelauncherGUI extends JDialog {
         Rectangle rect = screen.getDefaultConfiguration().getBounds();
         int width = (int) (rect.width / 3.25f);//Changed values to accommodate for new GUI
         int height = (int) (width / 0.95f);
+        if (isJvm8Oracle()) {
+            height = (int) (height * 1.1f); // increase height on Oracle JDK 8, messes up scaling
+        }
         int x = (rect.width - width) / 2;
         int y = (rect.height - height) / 2;
         this.setLocation(x, y);
@@ -409,7 +425,7 @@ public class RelauncherGUI extends JDialog {
                 .getDefaultScreenDevice().getDefaultConfiguration();
         Rectangle rect = gc.getBounds();
         float scale = rect.width / 1463f;
-        final float finalScale = (isJvm8()) ? scale : 1.0f;
+        final float finalScale = (isJvm8() && !isJvm8Oracle()) ? scale : 1.0f;
         // Main Panel
         JPanel javaPicker = new JPanel(new BorderLayout(5, 0));
         javaPicker.setLayout(new BoxLayout(javaPicker, BoxLayout.Y_AXIS));
@@ -419,7 +435,7 @@ public class RelauncherGUI extends JDialog {
         // TODO: Size mismatch between buttons
         JToggleButton simplifiedBtn = new JToggleButton("Automatic Install", true);
         JToggleButton manualBtn = new JToggleButton("Manual Selection");
-        if (isJvm8()) {
+        if (isJvm8() && !isJvm8Oracle()) {
             simplifiedBtn.setFont(new Font("Arial", Font.PLAIN, 18));
             manualBtn.setFont(new Font("Arial", Font.PLAIN, 18));
         }
@@ -434,7 +450,7 @@ public class RelauncherGUI extends JDialog {
         radioPanel.add(simplifiedBtn);
         radioPanel.add(manualBtn);
         radioPanel.setBorder(BorderFactory.createEmptyBorder(0,0,5,0));
-        if (isJvm8()) {
+        if (isJvm8()  && !isJvm8Oracle()) {
             scaleComponent(simplifiedBtn, scale);
             scaleComponent(manualBtn, scale);
             scaleComponent(radioPanel, scale/1.2f);
@@ -762,7 +778,7 @@ public class RelauncherGUI extends JDialog {
                 return;
             }
             if (autoSetup) {
-                if (vendorSelected==null || vendorSelected == VendorsEnum.ANY) {
+                if (vendorSelected==null) {
                     vendorSelected = VendorsEnum.AZUL_ZULU;
                 }
                 if (targetSelected==null) {

@@ -175,7 +175,7 @@ public class CleanroomRelauncher {
 //            javaArgs = String.join(" ", ManagementFactory.getRuntimeMXBean().getInputArguments());
 //        }
         if (relauncherEnabled) {
-            if (!autoSetup && selected == null || javaPath == null || needsNotifyLatest) {
+            if (!autoSetup && (selected == null || javaPath == null || needsNotifyLatest)) {
                 final String fJavaPath = javaPath;
                 final String fJavaArgs = javaArgs;
                 final VendorsEnum fJavaVendor = javaVendor;
@@ -364,6 +364,23 @@ public class CleanroomRelauncher {
             }
         } catch (Exception ignored) {}
         // J8 messes up scaling it seems
-        return currentJavaMajorVersion < 21;
+        return currentJavaMajorVersion == 8;
+    }
+    public static boolean isJvm8Oracle(){
+        // Detect current JVM
+        int currentJavaMajorVersion = 8;
+        String vendor="";
+        try {
+            vendor = System.getProperty("java.vendor");
+            String version = System.getProperty("java.version");
+            if (version.startsWith("1.")) {
+                currentJavaMajorVersion = Integer.parseInt(version.split("\\.")[1]);
+            } else {
+                currentJavaMajorVersion = Integer.parseInt(version.split("\\.")[0]);
+            }
+        } catch (Exception ignored) {}
+        // J8 messes up scaling it seems
+        boolean isOracle = vendor != null && vendor.toLowerCase(Locale.ENGLISH).contains("oracle");
+        return currentJavaMajorVersion == 8 && isOracle;
     }
 }

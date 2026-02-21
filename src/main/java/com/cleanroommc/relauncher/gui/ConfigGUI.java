@@ -37,6 +37,17 @@ public class ConfigGUI extends JDialog {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ignore) { }
+        Font baseFont = new Font("SansSerif", Font.PLAIN, 12);
+        String[] fontKeys = {
+                "Button.font", "Label.font", "ComboBox.font",
+                "TextField.font", "CheckBox.font", "ToggleButton.font",
+                "Panel.font", "OptionPane.font", "List.font"
+        };
+        for (String key : fontKeys) {
+            UIManager.put(key, baseFont);
+        }
+        System.setProperty("awt.useSystemAAFontSettings","on");
+        System.setProperty("swing.aatext", "true");
     }
     private static void scaleComponent(Component component, float scale) {
         // scaling rect

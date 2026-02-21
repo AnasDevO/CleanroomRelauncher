@@ -57,8 +57,8 @@ public final class GlobalDownloader {
         LoadingGUI loading = new LoadingGUI();
         loading.enableProgress();
         loading.updateStatus("Downloading Cleanroom files and libraries...");
-        loading.show();
         for (Future download : this.downloads) {
+            loading.show();
             try {
                 download.get();
                 completed++;
@@ -74,14 +74,16 @@ public final class GlobalDownloader {
                 throw new RuntimeException("Unable to complete download", e);
             }
         }
+        loading.disableProgress();
         loading.updateStatus("Download Complete");
         try{
-            Thread.sleep(300);
+            Thread.sleep(500);
         } catch (InterruptedException e){
           CleanroomRelauncher.LOGGER.warn("Interrupted thread sleep",e);
           loading.close();
         }
         loading.close();
+        loading.updateStatus("Initialising..");
 
     }
 
