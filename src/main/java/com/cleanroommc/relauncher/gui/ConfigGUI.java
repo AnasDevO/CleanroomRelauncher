@@ -225,7 +225,7 @@ public class ConfigGUI extends JDialog {
                 selected = null;
                 frame.dispose();
 
-                CleanroomRelauncher.LOGGER.info("Configuration was cancelled.");
+                CleanroomRelauncher.LOGGER.info("ConfigurationChange button was cancelled.");
             }
         });
         this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
@@ -728,7 +728,7 @@ public class ConfigGUI extends JDialog {
 
             frame.dispose();
         });
-        JButton configCancelButton = new JButton("Cancel Configuration");
+        JButton configCancelButton = new JButton("Discard Changes");
         configCancelButton.addActionListener(e -> {
             selected = null;
             frame.dispose();
