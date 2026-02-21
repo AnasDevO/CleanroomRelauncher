@@ -1,6 +1,7 @@
 package com.cleanroommc.relauncher.config;
 
 import com.cleanroommc.relauncher.CleanroomRelauncher;
+import com.cleanroommc.relauncher.util.enums.ArgsEnum;
 import com.cleanroommc.relauncher.util.enums.JavaTargetsEnum;
 import com.cleanroommc.relauncher.util.enums.VendorsEnum;
 import com.google.gson.Gson;
@@ -41,8 +42,10 @@ public class RelauncherConfiguration {
     private String javaExecutablePath;
     @SerializedName("args")
     private String javaArguments = "";
-    @SerializedName("autoInitialize")
-    private boolean autoInitialize;
+    @SerializedName("autoSetup")
+    private boolean autoSetup;
+    @SerializedName("enableRelauncher")
+    private boolean enableRelauncher=true;
 
     public String getCleanroomVersion() {
         return cleanroomVersion;
@@ -68,8 +71,12 @@ public class RelauncherConfiguration {
         return javaArguments;
     }
 
-    public boolean isAutoInitialize() {
-        return autoInitialize;
+    public boolean getAutoSetup() {
+        return autoSetup;
+    }
+
+    public boolean getRelauncherEnabled() {
+        return enableRelauncher;
     }
 
     public void setCleanroomVersion(String cleanroomVersion) {
@@ -88,6 +95,22 @@ public class RelauncherConfiguration {
         this.javaArguments = javaArguments;
     }
 
+    public void setAutoSetup(boolean autoSetup) {
+        this.autoSetup = autoSetup;
+    }
+
+    public void setRelauncherEnabled(boolean enableRelauncher) {
+        this.enableRelauncher= enableRelauncher;
+    }
+
+    public void setTargetJavaVersion(JavaTargetsEnum targetJavaVersion) {
+        this.targetJavaVersion = targetJavaVersion;
+    }
+
+    public void setTargetVendor(VendorsEnum targetVendor) {
+        this.targetVendor = targetVendor;
+    }
+
     public void save() {
         try {
             Files.createDirectories(FILE.getParent());
@@ -97,6 +120,10 @@ public class RelauncherConfiguration {
         } catch (IOException e) {
             CleanroomRelauncher.LOGGER.error("Unable to save config", e);
         }
+    }
+
+    public boolean argsContain(ArgsEnum arg){
+        return javaArguments.contains(arg.getArg());
     }
 
 }

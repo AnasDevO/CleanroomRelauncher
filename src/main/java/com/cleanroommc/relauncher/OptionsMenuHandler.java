@@ -1,9 +1,8 @@
 package com.cleanroommc.relauncher;
 
+import com.cleanroommc.relauncher.gui.GUIButtonIcon;
+import com.cleanroommc.relauncher.gui.GUIRelauncherMenu;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiIngameMenu;
-import net.minecraft.client.gui.GuiMainMenu;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
@@ -27,26 +26,22 @@ public class OptionsMenuHandler {
 
     @SubscribeEvent
     public void onGuiInit(GuiScreenEvent.InitGuiEvent.Post event) {
-        GuiScreen gui = event.getGui();
-        CleanroomRelauncher.LOGGER.info("Cleanroom Relauncher button has been Created!");
-        if (gui instanceof GuiMainMenu || gui instanceof GuiIngameMenu) {
+        if (event.getGui() instanceof net.minecraft.client.gui.GuiOptions) {
 
-            String targetText = "Mods";
+            String targetText = net.minecraft.util.text.translation.I18n.translateToLocal("options.skinCustomisation");
 
             List<GuiButton> buttons = event.getButtonList();
             for (GuiButton b : buttons) {
                 if (targetText.equals(b.displayString)) {
                     buttons.removeIf(btn -> btn.id == RELAUNCHER_BUTTON_ID);
-
-                    GuiButton relauncherBtn = new GuiButton(
+                    GuiButton relauncherBtn = new GUIButtonIcon(
                             RELAUNCHER_BUTTON_ID,
-                            b.x - 24,
-                            b.y,
-                            20, 20, "§bB"
+                            b.x,
+                            b.y - 24
                     );
 
                     buttons.add(relauncherBtn);
-                    return;
+                    break;
                 }
             }
         }
@@ -54,8 +49,7 @@ public class OptionsMenuHandler {
     @SubscribeEvent
     public void onActionPerformed(GuiScreenEvent.ActionPerformedEvent.Post event) {
         if (event.getButton().id == RELAUNCHER_BUTTON_ID) {
-            new Thread(() -> {
-            }).start();
+            event.getGui().mc.displayGuiScreen(new GUIRelauncherMenu(event.getGui()));
         }
     }
 

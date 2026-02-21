@@ -25,11 +25,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class JavaProvisioning {
-    private static final int MAX_RETRIES = 2;
     private static final int CONNECT_TIMEOUT_MS = 30_000;
     private static final int READ_TIMEOUT_MS = 120_000;
-    private static final int REDIRECT_LIMIT = 7;
-    private static final int TEST_RANGE_TIMEOUT_MS = 15_000;
     private static final String USER_AGENT = "Mozilla/5.0 CleanroomRelauncher/1.0";
 
 
@@ -41,7 +38,9 @@ public class JavaProvisioning {
             try{
                 loading.updateStatus("Checking provided path...");
                 CleanroomRelauncher.LOGGER.info("Checking path: {}", path);
-                if (testJava(path)){
+                if (target == null && vendor == null && testJava(path)){
+                    return path;
+                } else if(target != null && vendor !=null && testJava(path, vendor, target)){
                     return path;
                 }
                 CleanroomRelauncher.LOGGER.warn("Invalid path, Fetching a new java instance");
@@ -61,10 +60,11 @@ public class JavaProvisioning {
                 if (!validJavaInstalls.isEmpty()) {
                     for (JavaInstall javaInstall : validJavaInstalls) {
                         String currentInstallPath = javaInstall.home().getPath();
+                        String binaryPath = javaInstall.executable(true).getAbsolutePath();
                         loading.updateStatus("Testing: " + javaInstall.vendor().name());
                         if(testJava(currentInstallPath)){
                             loading.close();
-                            return currentInstallPath;
+                            return binaryPath;
                         }
                     }
                 }
@@ -113,6 +113,15 @@ public class JavaProvisioning {
         try{
             JavaInstall javaInstall = JavaUtils.parseInstall(javaPath);
             return javaInstall.version().major() >= 21;
+        } catch (IOException e) {
+            CleanroomRelauncher.LOGGER.error("Encountered an error checking the path", e);
+            return false;
+        }
+    }
+    private static boolean testJava(String javaPath, VendorsEnum vendor, JavaTargetsEnum target) {
+        try{
+            JavaInstall javaInstall = JavaUtils.parseInstall(javaPath);
+            return javaInstall.version().major() == target.getInternalNameInt() && javaInstall.vendor().name().toLowerCase().contains(vendor.getInternalName().toLowerCase());
         } catch (IOException e) {
             CleanroomRelauncher.LOGGER.error("Encountered an error checking the path", e);
             return false;
@@ -343,8 +352,10 @@ public class JavaProvisioning {
                 gui.updateStatus("Found download url: " + downloadUrl);
             }
             if (downloadUrl == null) {
+                gui.updateStatus("No download url found, please try again");
                 CleanroomRelauncher.LOGGER.error("No download link found in Foojay response for {} version {}", vendor, target);
-                return null;
+                Thread.sleep(5000);
+                return "";
             }
 
             // Regex redirect url, FooJay doesn't do redirects on its own
@@ -369,7 +380,7 @@ public class JavaProvisioning {
             CleanroomRelauncher.LOGGER.info("Deleted Downloaded archiveFile {}", archiveFile.toAbsolutePath());
             return finalPath;
 
-        } catch (IOException e){
+        } catch (IOException | InterruptedException e){
             CleanroomRelauncher.LOGGER.error("Unable to provision a java installation", e);
         }
         return "";
