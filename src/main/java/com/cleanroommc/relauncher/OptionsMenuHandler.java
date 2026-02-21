@@ -12,7 +12,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import java.util.List;
 
 
-@Mod(modid = "cleanroom-relauncher", name = "Cleanroom Relauncher", version = "0.3.2")
+@Mod(modid = Tags.MOD_ID, name = Tags.MOD_NAME, version = Tags.VERSION)
 public class OptionsMenuHandler {
 
     private static final int RELAUNCHER_BUTTON_ID = 989;
