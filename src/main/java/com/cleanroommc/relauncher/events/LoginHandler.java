@@ -11,7 +11,7 @@ import static com.cleanroommc.relauncher.CleanroomRelauncher.CONFIG;
 public class LoginHandler {
     @SubscribeEvent
     public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
-        if(!CONFIG.getLatestCleanroomVersion().equals(CONFIG.getCleanroomVersion()) && CONFIG.getLoginNotifications()) {
+        if((CONFIG.getLatestCleanroomVersion() == null || !CONFIG.getLatestCleanroomVersion().equals(CONFIG.getCleanroomVersion())) && CONFIG.getLoginNotifications()) {
             ITextComponent textComponent = new TextComponentString(TextFormatting.AQUA + "[CleanroomRelauncher] " + TextFormatting.WHITE + "A new version of Cleanroom is available!");
             event.player.sendMessage(textComponent);
         }
