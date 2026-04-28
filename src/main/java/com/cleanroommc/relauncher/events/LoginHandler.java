@@ -12,7 +12,7 @@ public class LoginHandler {
     @SubscribeEvent
     public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         if((CONFIG.getLatestCleanroomVersion() == null || !CONFIG.getLatestCleanroomVersion().equals(CONFIG.getCleanroomVersion())) && CONFIG.getLoginNotifications()) {
-            ITextComponent textComponent = new TextComponentString(TextFormatting.AQUA + "[CleanroomRelauncher] " + TextFormatting.WHITE + "A new version of Cleanroom is available!");
+            ITextComponent textComponent = new TextComponentString(TextFormatting.AQUA + "[CleanroomRelauncher] " + TextFormatting.WHITE + "A new version of Cleanroom is available! ( "+CONFIG.getLatestCleanroomVersion()+" )");
             event.player.sendMessage(textComponent);
         }
     }
