@@ -174,6 +174,9 @@ public class CleanroomRelauncher {
 //        if (javaArgs == null) {
 //            javaArgs = String.join(" ", ManagementFactory.getRuntimeMXBean().getInputArguments());
 //        }
+        if(needsNotifyLatest) {
+            CONFIG.setLatestCleanroomVersion(latestRelease.name);
+        }
         if (relauncherEnabled) {
             if (!autoSetup && (selected == null || javaPath == null || needsNotifyLatest)) {
                 final String fJavaPath = javaPath;
@@ -218,11 +221,6 @@ public class CleanroomRelauncher {
                 CONFIG.save();
             }
             if(autoSetup){
-                if(needsNotifyLatest) {
-                    selected = latestRelease;
-                    CONFIG.setCleanroomVersion(selected.name);
-                    CONFIG.setLatestCleanroomVersion(latestRelease.name);
-                }
                 javaPath = validateOrProvisionJava(javaPath, javaTarget, javaVendor);
                 while(Objects.equals(javaPath, "")){
                     final String fJavaPath = javaPath;

@@ -1,6 +1,8 @@
 package com.cleanroommc.relauncher;
 
+import com.cleanroommc.relauncher.events.LoginHandler;
 import com.google.common.eventbus.EventBus;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.LoadController;
 import net.minecraftforge.fml.common.MetadataCollection;
@@ -40,6 +42,7 @@ public class RelauncherModContainer extends DummyModContainer {
 
     @Override
     public boolean registerBus(EventBus bus, LoadController controller) {
+        MinecraftForge.EVENT_BUS.register(new LoginHandler());
         return true;
     }
 
