@@ -31,8 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static com.cleanroommc.relauncher.CleanroomRelauncher.isJvm8;
-import static com.cleanroommc.relauncher.CleanroomRelauncher.isJvm8Oracle;
+import static com.cleanroommc.relauncher.CleanroomRelauncher.*;
 
 public class RelauncherGUI extends JDialog {
 
@@ -244,43 +243,60 @@ public class RelauncherGUI extends JDialog {
 
         return panel;
     }
-    private JPanel createUpdateScreen() {
-        //Fast Update Panel
+    private JPanel createUpdateScreen(List<CleanroomRelease> releases) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
         JLabel logo = new JLabel(new ImageIcon(frame.getIconImage().getScaledInstance(160, 160, Image.SCALE_SMOOTH)));
         logo.setAlignmentX(Component.CENTER_ALIGNMENT);
-        logo.setBorder(new EmptyBorder(50, 0, 50, 0));
+        logo.setBorder(new EmptyBorder(50, 0, 30, 0));
+
+        JLabel title = new JLabel("A new Cleanroom version is available!");
+        title.setFont(title.getFont().deriveFont(Font.BOLD, 16f));
+        title.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel subtitle = new JLabel("Would you like to update to Cleanroom " + releases.get(0).name + "?");
+        subtitle.setFont(subtitle.getFont().deriveFont(Font.PLAIN, 13f));
+        subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        subtitle.setBorder(new EmptyBorder(4, 0, 24, 0));
 
         JButton fastUpdateBtn = new JButton("Update Now");
+        fastUpdateBtn.setFont(fastUpdateBtn.getFont().deriveFont(Font.BOLD, 14f));
         fastUpdateBtn.addActionListener(e -> {
             autoSetup = true;
             selected = null;
             frame.dispose();
         });
-        JButton skipBtn = new JButton("Skip this version");
+
+        JButton skipBtn = new JButton("Skip This Version");
+        skipBtn.setFont(skipBtn.getFont().deriveFont(Font.BOLD, 14f));
         skipBtn.addActionListener(e -> {
             autoSetup = true;
             frame.dispose();
         });
 
-
         JButton advancedBtn = new JButton("Advanced Settings");
-
-        fastUpdateBtn.setFont(fastUpdateBtn.getFont().deriveFont(Font.BOLD, 14f));
-        skipBtn.setFont(skipBtn.getFont().deriveFont(Font.BOLD, 14f));
-        this.getRootPane().setDefaultButton(fastUpdateBtn);
-
         advancedBtn.addActionListener(e -> cardLayout.show(cards, "ADVANCED"));
 
-        JPanel btnBox = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
-        btnBox.add(fastUpdateBtn);
-        btnBox.add(skipBtn);
-        btnBox.add(advancedBtn);
-        panel.add(logo);
-        panel.add(btnBox);
+        this.getRootPane().setDefaultButton(fastUpdateBtn);
 
+        JPanel upperBtnBox = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
+        upperBtnBox.setOpaque(false);                                  // fix: inherit parent bg
+        upperBtnBox.setAlignmentX(Component.CENTER_ALIGNMENT);        // fix: align in BoxLayout
+        upperBtnBox.add(fastUpdateBtn);
+        upperBtnBox.add(skipBtn);
+
+        JPanel lowerBtnBox = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
+        lowerBtnBox.setOpaque(false);                                  // fix: inherit parent bg
+        lowerBtnBox.setAlignmentX(Component.CENTER_ALIGNMENT);        // fix: align in BoxLayout
+        lowerBtnBox.setBorder(new EmptyBorder(8, 0, 40, 0));
+        lowerBtnBox.add(advancedBtn);
+
+        panel.add(logo);
+        panel.add(title);
+        panel.add(subtitle);
+        panel.add(upperBtnBox);
+        panel.add(lowerBtnBox);
         return panel;
     }
 
@@ -349,7 +365,7 @@ public class RelauncherGUI extends JDialog {
         this.setLocation(x, y);
 
 
-        JPanel startCard = updateNotification? createUpdateScreen() : createStartScreen();
+        JPanel startCard = updateNotification? createUpdateScreen(eligibleReleases) : createStartScreen();
         JPanel advancedCard = createAdvancedScreen(eligibleReleases);
 
         cards.add(startCard, "START");

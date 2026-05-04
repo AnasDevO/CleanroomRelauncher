@@ -46,8 +46,6 @@ public class RelauncherConfiguration {
     private boolean autoSetup;
     @SerializedName("enableRelauncher")
     private boolean enableRelauncher=true;
-    @SerializedName("enableLoginNotifications")
-    private boolean enableLoginNotifications=true;
 
     public String getCleanroomVersion() {
         return cleanroomVersion;
@@ -79,10 +77,6 @@ public class RelauncherConfiguration {
 
     public boolean getRelauncherEnabled() {
         return enableRelauncher;
-    }
-
-    public boolean getLoginNotifications() {
-        return enableLoginNotifications;
     }
 
     public void setCleanroomVersion(String cleanroomVersion) {

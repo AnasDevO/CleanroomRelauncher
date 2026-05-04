@@ -264,6 +264,8 @@ public class CleanroomRelauncher {
                         CONFIG.setTargetVendor(javaVendor);
                     }
                 }
+
+                CONFIG.save();
                 CONFIG.setJavaExecutablePath(javaPath);
                 LOGGER.warn("Setting the rest");
                 if (javaArgs == null || javaArgs.isEmpty()) {
@@ -283,6 +285,8 @@ public class CleanroomRelauncher {
                     javaVendor=VendorsEnum.AZUL_ZULU;
                     CONFIG.setTargetVendor(javaVendor);
                 }
+                CONFIG.setCleanroomVersion(selected.name);
+                CONFIG.setAutoSetup(autoSetup);
                 CONFIG.save();
 
 
