@@ -169,6 +169,7 @@ public class RelauncherGUI extends JDialog {
     public JavaTargetsEnum targetSelected = JavaTargetsEnum.J25;
     public VendorsEnum vendorSelected = VendorsEnum.AZUL_ZULU;
     public String javaPath, javaArgs;
+    public Boolean updateNotification;
     public boolean autoSetup;
     public boolean shouldScale;
     private static HashSet<ArgsEnum> args = new HashSet<>();
@@ -243,6 +244,45 @@ public class RelauncherGUI extends JDialog {
 
         return panel;
     }
+    private JPanel createUpdateScreen() {
+        //Fast Update Panel
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+        JLabel logo = new JLabel(new ImageIcon(frame.getIconImage().getScaledInstance(160, 160, Image.SCALE_SMOOTH)));
+        logo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        logo.setBorder(new EmptyBorder(50, 0, 50, 0));
+
+        JButton fastUpdateBtn = new JButton("Update Now");
+        fastUpdateBtn.addActionListener(e -> {
+            autoSetup = true;
+            selected = null;
+            frame.dispose();
+        });
+        JButton skipBtn = new JButton("Skip this version");
+        skipBtn.addActionListener(e -> {
+            autoSetup = true;
+            frame.dispose();
+        });
+
+
+        JButton advancedBtn = new JButton("Advanced Settings");
+
+        fastUpdateBtn.setFont(fastUpdateBtn.getFont().deriveFont(Font.BOLD, 14f));
+        skipBtn.setFont(skipBtn.getFont().deriveFont(Font.BOLD, 14f));
+        this.getRootPane().setDefaultButton(fastUpdateBtn);
+
+        advancedBtn.addActionListener(e -> cardLayout.show(cards, "ADVANCED"));
+
+        JPanel btnBox = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
+        btnBox.add(fastUpdateBtn);
+        btnBox.add(skipBtn);
+        btnBox.add(advancedBtn);
+        panel.add(logo);
+        panel.add(btnBox);
+
+        return panel;
+    }
 
     private JPanel createAdvancedScreen(List<CleanroomRelease> releases) {
         JPanel container = new JPanel(new BorderLayout());
@@ -308,7 +348,8 @@ public class RelauncherGUI extends JDialog {
         int y = (rect.height - height) / 2;
         this.setLocation(x, y);
 
-        JPanel startCard = createStartScreen();
+
+        JPanel startCard = updateNotification? createUpdateScreen() : createStartScreen();
         JPanel advancedCard = createAdvancedScreen(eligibleReleases);
 
         cards.add(startCard, "START");
