@@ -64,12 +64,11 @@ public class RelauncherConfiguration {
     }
 
     public JavaDistro getJavaVendor() {
-        JavaDistro vendor = JavaDistro.match(targetVendor);
-        return vendor == JavaDistro.UNKNOWN ? null : vendor;
+        return JavaDistro.match(targetVendor);
     }
 
     public JavaVersion getJavaTarget() {
-        return JavaVersion.parseOrThrow(targetJavaVersion > 0 ? targetJavaVersion : 25);
+        return JavaVersion.parseOrThrow(String.valueOf(targetJavaVersion));
     }
 
     public String getJavaExecutablePath() {
@@ -119,19 +118,8 @@ public class RelauncherConfiguration {
         this.autoSetup = autoSetup;
     }
 
-    public void setJavaSelectionMode(boolean autoSetup, JavaVersion targetJavaVersion, JavaDistro targetVendor) {
-        setAutoSetup(autoSetup);
-        if (autoSetup) {
-            setTargetJavaVersion(targetJavaVersion);
-            setTargetVendor(targetVendor);
-        } else {
-            this.targetJavaVersion = 0;
-            this.targetVendor = null;
-        }
-    }
-
     public void setRelauncherEnabled(boolean enableRelauncher) {
-        this.enableRelauncher = enableRelauncher;
+        this.enableRelauncher= enableRelauncher;
     }
 
     public void setTargetJavaVersion(JavaVersion targetJavaVersion) {
@@ -139,7 +127,7 @@ public class RelauncherConfiguration {
     }
 
     public void setTargetVendor(JavaDistro targetVendor) {
-        this.targetVendor = targetVendor == null || targetVendor == JavaDistro.UNKNOWN ? null : targetVendor.name();
+        this.targetVendor = targetVendor.name();
     }
 
     public void setClearCleanroomFolder(boolean value) {

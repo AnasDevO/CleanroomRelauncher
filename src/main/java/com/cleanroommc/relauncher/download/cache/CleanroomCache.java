@@ -54,10 +54,9 @@ public class CleanroomCache {
         CleanroomMultiMcPack multiMcPack = CleanroomMultiMcPack.of(this.version, multiMcPackZip);
         // CleanroomInstaller installer = CleanroomInstaller.of(this.version, installerJar);
 
-        CleanroomRelease.Asset mmcPackArtifact = this.release.getMultiMcPackArtifact();
-        multiMcPack.install(mmcPackArtifact.downloadUrl, mmcPackArtifact.getDigestHash(), mmcPackArtifact.getDigestAlgorithm());
+        multiMcPack.install(this.release.getMultiMcPackArtifact().downloadUrl, this.release.commitHash, CacheUtils.HashAlgorithm.SHA256);
 
-        if (!Files.exists(lwjglJson) || !Files.exists(forgeJson) || !Files.exists(minecraftJson)) {
+        if (!Files.exists(lwjglJson) || !Files.exists(forgeJson) || !Files.exists(minecraftJson) || !Files.exists(universalJar)) {
             multiMcPack.extract(this);
         }
 
@@ -70,9 +69,7 @@ public class CleanroomCache {
         List<Version> versions = new ArrayList<>();
 
         Version forgeJsonVersion = Version.parse(forgeJson);
-        if (Files.exists(this.getUniversalJar())) {
-            forgeJsonVersion.libraryPaths.add(this.getUniversalJar().toAbsolutePath().toString());
-        }
+        forgeJsonVersion.libraryPaths.add(this.getUniversalJar().toAbsolutePath().toString());
 
         Version minecraftJsonVersion = Version.parse(minecraftJson);
         Version lwjglJsonVersion = Version.parse(lwjglJson);
