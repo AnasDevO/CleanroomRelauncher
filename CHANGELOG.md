@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.2] - 2026-07-05
+
+### Fixed
+- Duplicate downloads as the downloader is now cleaned up to avoid this from happening
+
 ## [0.6.1] - 2026-07-02
 
 ### Changed
