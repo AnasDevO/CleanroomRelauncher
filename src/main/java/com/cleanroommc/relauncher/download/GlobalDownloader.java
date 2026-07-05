@@ -12,42 +12,40 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.Future;
 
 public final class GlobalDownloader {
 
     public static final GlobalDownloader INSTANCE = new GlobalDownloader();
 
-    private final List<ForkJoinTask<?>> downloads = new ArrayList<>();
+    private final ConcurrentMap<Path, ForkJoinTask<?>> downloads = new ConcurrentHashMap<>();
 
     public ForkJoinTask<?> from(String source, File destination, String expectedHash, CacheUtils.HashAlgorithm algo) {
-        URI uri;
         URL url;
         try {
-            uri = URI.create(source);
-            url = uri.toURL();
+            url = URI.create(source).toURL();
         } catch (MalformedURLException e) {
             throw new RuntimeException(String.format("Unable to construct url %s", source), e);
         }
-        final String cleanHash = expectedHash != null ? expectedHash.trim() : null;
-        ForkJoinTask<?> task = ForkJoinPool.commonPool().submit(() -> {
+        String cleanHash = expectedHash != null ? expectedHash.trim() : null;
+        Path key = destination.toPath().toAbsolutePath().normalize();
+        return this.downloads.computeIfAbsent(key, k -> ForkJoinPool.commonPool().submit(() -> {
             try {
                 downloadToVerifiedFile(url, destination, cleanHash, algo);
-                CleanroomRelauncher.LOGGER.debug("Downloaded {} to {}", uri.toString(), destination.getAbsolutePath());
+                CleanroomRelauncher.LOGGER.debug("Downloaded {} to {}", source, destination.getAbsolutePath());
             } catch (IOException e) {
                 throw new DownloadException(url, destination, e);
             }
-        });
-        synchronized (this.downloads) {
-            this.downloads.add(task);
-        }
-        return task;
+        }));
     }
 
     public void immediatelyFrom(String source, File destination, String expectedHash, CacheUtils.HashAlgorithm algo) {
@@ -59,24 +57,20 @@ public final class GlobalDownloader {
             throw new RuntimeException("Interrupted while waiting for download", e);
         } catch (ExecutionException e) {
             throw unwrapDownloadFailure(e);
-        } finally {
-            synchronized (this.downloads) {
-                this.downloads.remove(task);
-            }
         }
     }
 
     public void blockUntilFinished(LoadingGUI loading) {
-        List<ForkJoinTask<?>> downloadsToWaitFor;
-        synchronized (this.downloads) {
-            downloadsToWaitFor = new ArrayList<>(this.downloads);
-            this.downloads.clear();
+        List<ForkJoinTask<?>> downloadsToWaitFor = new ArrayList<>();
+        for (Iterator<ForkJoinTask<?>> iterator = this.downloads.values().iterator(); iterator.hasNext(); ) {
+            downloadsToWaitFor.add(iterator.next());
+            iterator.remove();
         }
 
         int total = downloadsToWaitFor.size();
         int completed = 0;
         int last = 0;
-        for (Future download : downloadsToWaitFor) {
+        for (ForkJoinTask<?> download : downloadsToWaitFor) {
             try {
                 download.get();
                 completed++;
@@ -108,6 +102,9 @@ public final class GlobalDownloader {
     }
 
     private static void downloadToVerifiedFile(URL url, File destination, String expectedHash, CacheUtils.HashAlgorithm algo) throws IOException {
+        if (isVerifiedFile(destination, expectedHash, algo)) {
+            return;
+        }
         File parent = destination.getParentFile();
         if (parent != null) {
             Files.createDirectories(parent.toPath());
@@ -134,6 +131,10 @@ public final class GlobalDownloader {
                 CleanroomRelauncher.LOGGER.warn("Failed to delete temporary download file {}", temp, e);
             }
         }
+    }
+
+    private static boolean isVerifiedFile(File destination, String expectedHash, CacheUtils.HashAlgorithm algo) throws IOException {
+        return expectedHash != null && algo != null && destination.isFile() && !CacheUtils.isFileCorrupt(destination, expectedHash, algo);
     }
 
     private static RuntimeException unwrapDownloadFailure(ExecutionException e) {
