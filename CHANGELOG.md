@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.3] - 2026-07-14
+
+### Fixed
+- Errors when parsing installations
+
 ## [0.6.2] - 2026-07-05
 
 ### Fixed
