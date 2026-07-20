@@ -28,7 +28,13 @@ public class CacheUtils {
     }
 
     public static boolean isFileCorrupt(File file, String expectedHash, HashAlgorithm algo) throws IOException {
-        return !file.exists() || !expectedHash.equalsIgnoreCase(hash(file, algo));
+        if (!file.exists()) {
+            return true;
+        }
+        if (expectedHash == null || algo == null) {
+            return true;
+        }
+        return !expectedHash.equalsIgnoreCase(hash(file, algo));
     }
 
     public static void updateHash(File target, HashAlgorithm algo) throws IOException {

@@ -55,7 +55,6 @@ public class Version {
     public transient List<String> libraryPaths = new ArrayList<>();
     public transient List<String> nativesPaths = new ArrayList<>();
 
-    // TODO: multithread
     public void downloadLibraries(Path librariesDirectory) {
         if (mainJar != null) {
             libraries.add(mainJar); // Fixme
@@ -66,20 +65,20 @@ public class Version {
             }
             Path libraryJar = librariesDirectory.resolve(library.downloads.artifact.getPath(library.name));
             try{
-                if (!Files.exists(libraryJar) || CacheUtils.isFileCorrupt(libraryJar.toFile(), library.downloads.artifact.sha1, CacheUtils.HashAlgorithm.SHA1)) {
+                if (CacheUtils.isFileCorrupt(libraryJar.toFile(), library.downloads.artifact.sha1, CacheUtils.HashAlgorithm.SHA1)) {
                     GlobalDownloader.INSTANCE.from(library.downloads.artifact.url, libraryJar.toFile(), library.downloads.artifact.sha1, CacheUtils.HashAlgorithm.SHA1);
                 }
-            } catch (IOException e){
+            } catch (IOException e) {
                 CleanroomRelauncher.LOGGER.error(library.downloads.artifact.url, e);
             }
             Download nativeArtifact = library.getNative(Platform.current());
             if (nativeArtifact != null) {
                 Path nativesJar = librariesDirectory.resolve(nativeArtifact.getPath(library.name));
                 try{
-                    if (!Files.exists(nativesJar) || CacheUtils.isFileCorrupt(nativesJar.toFile(), nativeArtifact.sha1, CacheUtils.HashAlgorithm.SHA1)) {
+                    if (CacheUtils.isFileCorrupt(nativesJar.toFile(), nativeArtifact.sha1, CacheUtils.HashAlgorithm.SHA1)) {
                         GlobalDownloader.INSTANCE.from(nativeArtifact.url, nativesJar.toFile(), nativeArtifact.sha1, CacheUtils.HashAlgorithm.SHA1);
                     }
-                } catch (IOException e){
+                } catch (IOException e) {
                     CleanroomRelauncher.LOGGER.error(nativeArtifact.url, e);
                 }
             }

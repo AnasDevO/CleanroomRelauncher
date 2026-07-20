@@ -29,7 +29,7 @@ public class CleanroomInstaller implements CleanroomZipArtifact {
     @Override
     public void install(String url, String expectedHash, CacheUtils.HashAlgorithm algo) {
         try{
-            if (!Files.exists(this.location) || CacheUtils.isFileCorrupt(this.location.toFile(), expectedHash, algo)) {
+            if (CacheUtils.isFileCorrupt(this.location.toFile(), expectedHash, algo)) {
                 GlobalDownloader.INSTANCE.immediatelyFrom(url, this.location.toFile(), expectedHash, algo);
             }
         } catch (IOException e){
